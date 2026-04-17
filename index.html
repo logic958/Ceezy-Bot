@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <title>Lumina · smart assistant</title>
+  <!-- Google Font & Font Awesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Inter", sans-serif;
+      min-height: 100vh;
+      background: radial-gradient(circle at 20% 30%, #2b2e4a, #1a1e2f, #0f121c);
+      background-attachment: fixed;
+      color: #f0f3fa;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* subtle noise / extra depth */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJmIj48ZmVUdXJidWxlbmNlIHR5cGU9ImZyYWN0YWxOb2lzZSIgYmFzZUZyZXF1ZW5jeT0iLjc1IiBudW1PY3RhdmVzPSIzIiAvPjwvZmlsdGVyPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbHRlcj0idXJsKCNmKSIgb3BhY2l0eT0iMC4wNCIgLz48L3N2Zz4=');
+      opacity: 0.25;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* main containers */
+    #landingPage, .app-wrapper {
+      position: relative;
+      z-index: 5;
+    }
+
+    /* ---------- GLASS CORE ---------- */
+    .glass-card, .glass-sidebar, .glass-panel, .message-bubble, .tool-card, .profile-stat-card, .chat-container, .input-wrapper {
+      background: rgba(20, 25, 40, 0.25);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 28px;
+      box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.2), 0 0 0 0.5px rgba(255, 255, 255, 0.05) inset;
+      transition: all 0.25s ease-in-out;
+    }
+
+    /* extra glow on hover for interactive glass */
+    .glass-card:hover, .tool-card:hover, .sidebar nav a:hover, .action-btn:hover, .send-btn:hover {
+      box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(210, 230, 255, 0.2) inset, 0 0 18px rgba(120, 180, 255, 0.3);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
+
+    /* LANDING PAGE */
+    .landing-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .landing-card {
+      max-width: 560px;
+      width: 100%;
+      padding: 3rem 2.5rem;
+      text-align: center;
+      background: rgba(18, 22, 35, 0.3);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 48px;
+      box-shadow: 0 30px 60px -10px #00000055, 0 0 0 0.5px rgba(255,255,255,0.05) inset;
+    }
+
+    .landing-card h1 {
+      font-size: 3.8rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #ffffff, #d6e2ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 0.5rem;
+      text-shadow: 0 2px 10px #1e2a4a;
+    }
+
+    .landing-tagline {
+      font-size: 1.3rem;
+      font-weight: 350;
+      opacity: 0.9;
+      margin-bottom: 2.5rem;
+    }
+
+    .btn-primary {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 1rem 2.8rem;
+      font-size: 1.3rem;
+      font-weight: 500;
+      color: white;
+      border-radius: 60px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 12px 20px -10px #00000055;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-primary i {
+      font-size: 1.2rem;
+      transition: transform 0.2s;
+    }
+
+    .btn-primary:hover {
+      background: rgba(130, 170, 255, 0.2);
+      border-color: rgba(200, 220, 255, 0.5);
+      box-shadow: 0 20px 30px -8px #000000, 0 0 20px #3f6ac0aa;
+      transform: scale(1.02);
+    }
+
+    .btn-primary:hover i {
+      transform: translateX(6px);
+    }
+
+    /* APP LAYOUT (sidebar + main) */
+    .app-wrapper {
+      display: none; /* hidden until start */
+      min-height: 100vh;
+      padding: 1.5rem;
+    }
+
+    .app-grid {
+      display: flex;
+      gap: 1.5rem;
+      max-width: 1440px;
+      margin: 0 auto;
+      height: calc(100vh - 3rem);
+      min-height: 650px;
+    }
+
+    /* GLASS SIDEBAR */
+    .glass-sidebar {
+      width: 280px;
+      padding: 2rem 1.2rem;
+      display: flex;
+      flex-direction: column;
+      border-radius: 36px;
+      background: rgba(12, 16, 26, 0.25);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .sidebar-header {
+      padding: 0 0.8rem 1.8rem;
+      font-size: 1.8rem;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .sidebar-header i {
+      background: linear-gradient(145deg, #b1ccff, #a0b5ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-right: 10px;
+    }
+
+    .sidebar nav {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      margin-top: 1.8rem;
+    }
+
+    .sidebar nav a {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0.9rem 1.2rem;
+      font-size: 1.2rem;
+      font-weight: 450;
+      color: #eef3ff;
+      text-decoration: none;
+      border-radius: 24px;
+      background: transparent;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .sidebar nav a i {
+      width: 26px;
+      font-size: 1.3rem;
+      color: #b8cbff;
+    }
+
+    .sidebar nav a:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255,255,255,0.1);
+    }
+
+    .sidebar nav a.active {
+      background: rgba(90, 140, 255, 0.18);
+      border: 1px solid rgba(140, 190, 255, 0.25);
+      box-shadow: 0 0 14px #2e5cb8aa;
+    }
+
+    .main-content {
+      flex: 1;
+      background: rgba(18, 23, 35, 0.2);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-radius: 36px;
+      padding: 2rem 2.2rem;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 18px 40px -10px #00000055;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* DASHBOARD / QUICK ACTIONS */
+    .welcome-section h2 {
+      font-size: 2.2rem;
+      font-weight: 450;
+      margin-bottom: 0.4rem;
+    }
+
+    .welcome-section p {
+      opacity: 0.75;
+      font-size: 1.1rem;
+      margin-bottom: 2.2rem;
+    }
+
+    .quick-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 0.5rem;
+    }
+
+    .action-btn {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 48px;
+      padding: 1rem 2rem;
+      font-size: 1.15rem;
+      font-weight: 500;
+      color: white;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      box-shadow: 0 8px 18px -6px #00000055;
+    }
+
+    /* CHAT */
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background: transparent;
+      backdrop-filter: none;
+      box-shadow: none;
+      border: none;
+      padding: 0;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 0.5rem;
+      margin-bottom: 1.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .message-bubble {
+      padding: 1rem 1.4rem;
+      max-width: 80%;
+      border-radius: 28px 28px 28px 8px;
+      background: rgba(35, 45, 70, 0.45);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.06);
+      align-self: flex-start;
+      font-size: 1.05rem;
+      word-break: break-word;
+    }
+
+    .message-bubble.user {
+      align-self: flex-end;
+      background: rgba(80, 140, 255, 0.25);
+      border-radius: 28px 28px 8px 28px;
+      border-color: rgba(170, 210, 255, 0.2);
+    }
+
+    .chat-input-area {
+      display: flex;
+      gap: 0.8rem;
+      align-items: center;
+      background: rgba(10, 15, 26, 0.3);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-radius: 60px;
+      padding: 0.5rem 0.5rem 0.5rem 1.6rem;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .chat-input-area input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      padding: 1rem 0;
+      font-size: 1.05rem;
+      color: white;
+      outline: none;
+    }
+
+    .chat-input-area input::placeholder {
+      color: #b8c7e7;
+      opacity: 0.7;
+    }
+
+    .send-btn {
+      background: rgba(100, 160, 255, 0.25);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 50px;
+      width: 54px;
+      height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.4rem;
+      cursor: pointer;
+      backdrop-filter: blur(12px);
+      transition: 0.15s;
+    }
+
+    /* TOOLS GRID */
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .tool-card {
+      padding: 2rem 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      background: rgba(28, 35, 55, 0.3);
+      backdrop-filter: blur(16px);
+      border-radius: 32px;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .tool-card i {
+      font-size: 2.8rem;
+      margin-bottom: 1.2rem;
+      color: #b8d0ff;
+    }
+
+    .tool-card h3 {
+      font-weight: 500;
+      font-size: 1.4rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .tool-card p {
+      opacity: 0.7;
+    }
+
+    /* PROFILE */
+    .profile-header {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+      flex-wrap: wrap;
+    }
+
+    .avatar-lg {
+      width: 90px;
+      height: 90px;
+      border-radius: 40px;
+      background: linear-gradient(145deg, #4f6eb3, #253a66);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.8rem;
+      font-weight: 300;
+      border: 2px solid rgba(255,255,255,0.2);
+      box-shadow: 0 14px 28px -8px black;
+    }
+
+    .stats-row {
+      display: flex;
+      gap: 1.2rem;
+      flex-wrap: wrap;
+      margin: 1.8rem 0;
+    }
+
+    .stat-item {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 1.2rem 2rem;
+      border-radius: 28px;
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.04);
+      flex: 1 0 120px;
+    }
+
+    .settings-btn {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 40px;
+      padding: 0.9rem 2.2rem;
+      font-size: 1.1rem;
+      color: white;
+      backdrop-filter: blur(12px);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* utilities */
+    .hidden {
+      display: none !important;
+    }
+
+    /* mobile responsive */
+    @media (max-width: 700px) {
+      .app-grid {
+        flex-direction: column;
+        height: auto;
+      }
+      .glass-sidebar {
+        width: 100%;
+        padding: 1.2rem;
+      }
+      .sidebar nav {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .sidebar nav a {
+        padding: 0.7rem 1.2rem;
+      }
+      .landing-card h1 {
+        font-size: 2.8rem;
+      }
+      .main-content {
+        padding: 1.5rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .landing-card {
+        padding: 2rem 1.5rem;
+      }
+    }
+
+    /* custom scroll */
+    .main-content::-webkit-scrollbar, .chat-messages::-webkit-scrollbar {
+      width: 6px;
+    }
+    .main-content::-webkit-scrollbar-track, .chat-messages::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .main-content::-webkit-scrollbar-thumb, .chat-messages::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.15);
+      border-radius: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- LANDING PAGE -->
+<div id="landingPage" class="landing-container">
+  <div class="landing-card glass-card">
+    <h1><i class="fas fa-sparkles" style="font-size: 2.8rem; margin-right: 8px;"></i> Lumina</h1>
+    <div class="landing-tagline">clarity · create · communicate</div>
+    <button class="btn-primary" id="startNowBtn">
+      <span>Start Now</span> <i class="fas fa-arrow-right"></i>
+    </button>
+    <div style="margin-top: 2rem; opacity: 0.5; font-size: 0.9rem;">universal smart assistant</div>
+  </div>
+</div>
+
+<!-- MAIN APP (hidden initially) -->
+<div id="appWrapper" class="app-wrapper">
+  <div class="app-grid">
+    <!-- GLASS SIDEBAR -->
+    <aside class="glass-sidebar">
+      <div class="sidebar-header">
+        <i class="fas fa-crown"></i> Lumina
+      </div>
+      <nav>
+        <a href="#" data-view="dashboard" class="active" id="navDashboard"><i class="fas fa-home"></i> Home</a>
+        <a href="#" data-view="chat" id="navChat"><i class="fas fa-comment-dots"></i> Chat</a>
+        <a href="#" data-view="tools" id="navTools"><i class="fas fa-wand-magic-sparkles"></i> Tools</a>
+        <a href="#" data-view="profile" id="navProfile"><i class="fas fa-user-circle"></i> Profile</a>
+      </nav>
+      <div style="margin-top: auto; padding: 1.2rem 0.8rem; opacity: 0.5; font-size: 0.85rem;">
+        <i class="fas fa-shield"></i> v2.0 · secure
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA (dynamic) -->
+    <main class="main-content" id="mainContent">
+      <!-- filled by js -->
+    </main>
+  </div>
+</div>
+
+<script>
+  (function(){
+    "use strict";
+
+    // DOM elements
+    const landing = document.getElementById('landingPage');
+    const appWrapper = document.getElementById('appWrapper');
+    const mainContent = document.getElementById('mainContent');
+    const startBtn = document.getElementById('startNowBtn');
+    
+    // nav links
+    const navLinks = document.querySelectorAll('.sidebar nav a');
+    const navDashboard = document.getElementById('navDashboard');
+    const navChat = document.getElementById('navChat');
+    const navTools = document.getElementById('navTools');
+    const navProfile = document.getElementById('navProfile');
+
+    // State
+    let currentView = 'dashboard'; // dashboard, chat, tools, profile
+    let chatMessages = [
+      { sender: 'ai', text: 'Hello! I’m Lumina, your smart assistant. How can I help you today?' },
+      { sender: 'user', text: 'I’d like to improve my writing.' },
+      { sender: 'ai', text: 'Sure! You can use the "Message Rewriter" in Tools, or tell me what to refine.' }
+    ];
+
+    // ---------- RENDER FUNCTIONS ----------
+    function renderDashboard() {
+      mainContent.innerHTML = `
+        <div class="welcome-section">
+          <h2>👋 Welcome back,</h2>
+          <p>Your day, amplified with clarity.</p>
+        </div>
+        <div class="quick-actions">
+          <button class="action-btn" data-quick="chat"><i class="fas fa-comment"></i> Chat</button>
+          <button class="action-btn" data-quick="tools"><i class="fas fa-pen-fancy"></i> Generate</button>
+          <button class="action-btn" data-quick="tools"><i class="fas fa-sparkles"></i> Improve Text</button>
+        </div>
+        <div style="margin-top: 2.8rem;">
+          <div class="glass-card" style="padding: 1.8rem; border-radius: 32px; background: rgba(255,255,255,0.03);">
+            <i class="fas fa-lightbulb" style="font-size: 1.8rem; margin-bottom: 0.8rem; opacity: 0.8;"></i>
+            <h3 style="font-weight: 400;">Today’s insight</h3>
+            <p style="opacity: 0.8; margin-top: 0.5rem;">"Clear communication is the bridge between confusion and clarity."</p>
+          </div>
+        </div>
+      `;
+      attachQuickActions();
+    }
+
+    function renderChat() {
+      let messagesHtml = '';
+      chatMessages.forEach(msg => {
+        const bubbleClass = msg.sender === 'user' ? 'user' : '';
+        messagesHtml += `<div class="message-bubble ${bubbleClass}">${escapeHtml(msg.text)}</div>`;
+      });
+
+      mainContent.innerHTML = `
+        <div class="chat-container">
+          <div class="chat-messages" id="chatMessagesContainer">
+            ${messagesHtml}
+          </div>
+          <div class="chat-input-area">
+            <input type="text" id="chatInput" placeholder="Type your message..." autocomplete="off" />
+            <button class="send-btn" id="sendChatBtn"><i class="fas fa-paper-plane"></i></button>
+          </div>
+        </div>
+      `;
+      
+      const container = document.getElementById('chatMessagesContainer');
+      if(container) container.scrollTop = container.scrollHeight;
+
+      const sendBtn = document.getElementById('sendChatBtn');
+      const chatInput = document.getElementById('chatInput');
+      
+      const sendMessage = () => {
+        const text = chatInput.value.trim();
+        if (!text) return;
+        
+        chatMessages.push({ sender: 'user', text: text });
+        // Simulate AI response
+        setTimeout(() => {
+          chatMessages.push({ sender: 'ai', text: 'Thanks for your message! I’m here to help with ideas, rewrites, or anything you need. ✨' });
+          if (currentView === 'chat') renderChat();
+        }, 400);
+        
+        renderChat();
+      };
+      
+      sendBtn.addEventListener('click', sendMessage);
+      chatInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage(); });
+    }
+
+    function renderTools() {
+      mainContent.innerHTML = `
+        <h2 style="font-weight: 400; margin-bottom: 0.5rem;"><i class="fas fa-toolbox" style="margin-right: 12px;"></i>Smart Tools</h2>
+        <p style="opacity: 0.7; margin-bottom: 0.8rem;">Tap any card to start</p>
+        <div class="tools-grid">
+          <div class="tool-card" data-tool="generator">
+            <i class="fas fa-feather-alt"></i>
+            <h3>Text Generator</h3>
+            <p>Create drafts, ideas, emails</p>
+          </div>
+          <div class="tool-card" data-tool="rewriter">
+            <i class="fas fa-rotate-left"></i>
+            <h3>Message Rewriter</h3>
+            <p>Improve clarity & tone</p>
+          </div>
+          <div class="tool-card" data-tool="ideas">
+            <i class="fas fa-lightbulb"></i>
+            <h3>Idea Generator</h3>
+            <p>Brainstorming assistant</p>
+          </div>
+        </div>
+        <div style="margin-top: 2rem; padding: 0.5rem; font-style: italic; opacity:0.7;">
+          <i class="fas fa-arrow-up"></i> click on any tool — demo ready
+        </div>
+      `;
+      
+      document.querySelectorAll('.tool-card').forEach(card => {
+        card.addEventListener('click', (e) => {
+          const tool = card.dataset.tool;
+          alert(`✨ ${tool} demo: This would open the ${tool} interface. (glass UI prototype)`);
+        });
+      });
+    }
+
+    function renderProfile() {
+      mainContent.innerHTML = `
+        <div class="profile-header">
+          <div class="avatar-lg">😊</div>
+          <div>
+            <h2 style="font-weight: 400;">Alex Rivera</h2>
+            <p style="opacity: 0.7;"><i class="fas fa-envelope"></i> alex@lumina.ai</p>
+          </div>
+        </div>
+        <div class="stats-row">
+          <div class="stat-item"><i class="fas fa-message"></i> 247 msgs</div>
+          <div class="stat-item"><i class="fas fa-bolt"></i> 32 tools</div>
+          <div class="stat-item"><i class="fas fa-calendar"></i> 12 days</div>
+        </div>
+        <div style="display: flex; gap: 1rem; margin-top: 1.2rem;">
+          <button class="settings-btn"><i class="fas fa-sliders"></i> Preferences</button>
+          <button class="settings-btn"><i class="fas fa-shield"></i> Privacy</button>
+        </div>
+        <div style="margin-top: 2.8rem; opacity: 0.6;">
+          <i class="fas fa-circle-info"></i> Smart assistant usage · 1.2k tokens today
+        </div>
+      `;
+      document.querySelectorAll('.settings-btn').forEach(btn => {
+        btn.addEventListener('click', () => alert('⚙️ Settings panel (glass demo)'));
+      });
+    }
+
+    // helper
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function attachQuickActions() {
+      document.querySelectorAll('[data-quick]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const target = btn.dataset.quick;
+          if (target === 'chat') setView('chat');
+          else if (target === 'tools') setView('tools');
+        });
+      });
+    }
+
+    // set active view
+    function setView(view) {
+      currentView = view;
+      
+      // update active nav
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.dataset.view === view) link.classList.add('active');
+      });
+      
+      switch(view) {
+        case 'dashboard': renderDashboard(); break;
+        case 'chat': renderChat(); break;
+        case 'tools': renderTools(); break;
+        case 'profile': renderProfile(); break;
+        default: renderDashboard();
+      }
+    }
+
+    // Navigation listeners
+    navLinks.forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const view = link.dataset.view;
+        if (view) setView(view);
+      });
+    });
+
+    // Start now: switch to app
+    startBtn.addEventListener('click', () => {
+      landing.style.display = 'none';
+      appWrapper.style.display = 'block';
+      setView('dashboard');
+    });
+
+    // Also handle if user wants to go back? Not required, but we keep start.
+
+    // initialize (landing visible)
+    // Pre-render nothing until start
+
+    // responsiveness: if already started? no.
+
+    // If someone opens with hash, ignore.
+    // Additional: if window resize, fine.
+
+    // For quick demo, if someone wants to see dashboard, they must click start.
+  })();
+</script>
+<!-- small extra polish: prevent body scroll when landing? no needed -->
+</body>
+</html>
