@@ -546,11 +546,7 @@
     
     // nav links
     const navLinks = document.querySelectorAll('.sidebar nav a');
-    const navDashboard = document.getElementById('navDashboard');
-    const navChat = document.getElementById('navChat');
-    const navTools = document.getElementById('navTools');
-    const navProfile = document.getElementById('navProfile');
-
+    
     // State
     let currentView = 'dashboard'; // dashboard, chat, tools, profile
     let chatMessages = [
@@ -558,6 +554,24 @@
       { sender: 'user', text: 'I’d like to improve my writing.' },
       { sender: 'ai', text: 'Sure! You can use the "Message Rewriter" in Tools, or tell me what to refine.' }
     ];
+
+    // ----- AI response simulation (smart but simple) -----
+    function generateAIResponse(userMessage) {
+      const msg = userMessage.toLowerCase();
+      if (msg.includes('hello') || msg.includes('hi')) {
+        return "Hello there! 👋 I'm here to assist with writing, ideas, or any questions.";
+      } else if (msg.includes('idea') || msg.includes('brainstorm')) {
+        return "💡 Let's brainstorm! Try our Idea Generator in Tools, or tell me a topic and I'll suggest some angles.";
+      } else if (msg.includes('rewrite') || msg.includes('improve')) {
+        return "✍️ I can help rewrite messages. Paste a sentence and I'll suggest a clearer version.";
+      } else if (msg.includes('thank')) {
+        return "You're very welcome! 😊 Happy to help anytime.";
+      } else if (msg.includes('help')) {
+        return "I can: generate text, rewrite messages, brainstorm ideas, or just chat. What would you like?";
+      } else {
+        return "That's interesting! I'm learning constantly. You can also try the Tools section for text generation or rewriting.";
+      }
+    }
 
     // ---------- RENDER FUNCTIONS ----------
     function renderDashboard() {
@@ -568,8 +582,8 @@
         </div>
         <div class="quick-actions">
           <button class="action-btn" data-quick="chat"><i class="fas fa-comment"></i> Chat</button>
-          <button class="action-btn" data-quick="tools"><i class="fas fa-pen-fancy"></i> Generate</button>
-          <button class="action-btn" data-quick="tools"><i class="fas fa-sparkles"></i> Improve Text</button>
+          <button class="action-btn" data-quick="generate"><i class="fas fa-pen-fancy"></i> Generate</button>
+          <button class="action-btn" data-quick="improve"><i class="fas fa-sparkles"></i> Improve Text</button>
         </div>
         <div style="margin-top: 2.8rem;">
           <div class="glass-card" style="padding: 1.8rem; border-radius: 32px; background: rgba(255,255,255,0.03);">
@@ -611,12 +625,15 @@
         const text = chatInput.value.trim();
         if (!text) return;
         
+        // Add user message
         chatMessages.push({ sender: 'user', text: text });
-        // Simulate AI response
+        
+        // Simulate AI response with a slight delay
         setTimeout(() => {
-          chatMessages.push({ sender: 'ai', text: 'Thanks for your message! I’m here to help with ideas, rewrites, or anything you need. ✨' });
+          const aiReply = generateAIResponse(text);
+          chatMessages.push({ sender: 'ai', text: aiReply });
           if (currentView === 'chat') renderChat();
-        }, 400);
+        }, 500);
         
         renderChat();
       };
@@ -628,7 +645,7 @@
     function renderTools() {
       mainContent.innerHTML = `
         <h2 style="font-weight: 400; margin-bottom: 0.5rem;"><i class="fas fa-toolbox" style="margin-right: 12px;"></i>Smart Tools</h2>
-        <p style="opacity: 0.7; margin-bottom: 0.8rem;">Tap any card to start</p>
+        <p style="opacity: 0.7; margin-bottom: 0.8rem;">Tap any card to start — instant demo</p>
         <div class="tools-grid">
           <div class="tool-card" data-tool="generator">
             <i class="fas fa-feather-alt"></i>
@@ -646,15 +663,23 @@
             <p>Brainstorming assistant</p>
           </div>
         </div>
-        <div style="margin-top: 2rem; padding: 0.5rem; font-style: italic; opacity:0.7;">
-          <i class="fas fa-arrow-up"></i> click on any tool — demo ready
+        <div style="margin-top: 2.5rem; background: rgba(0,0,0,0.15); border-radius: 28px; padding: 1.6rem;" class="glass-card">
+          <i class="fas fa-robot" style="margin-right: 8px;"></i> 
+          <span id="toolDemoText">Click any tool above to see a quick sample.</span>
         </div>
       `;
       
       document.querySelectorAll('.tool-card').forEach(card => {
-        card.addEventListener('click', (e) => {
+        card.addEventListener('click', () => {
           const tool = card.dataset.tool;
-          alert(`✨ ${tool} demo: This would open the ${tool} interface. (glass UI prototype)`);
+          const demoEl = document.getElementById('toolDemoText');
+          if (tool === 'generator') {
+            demoEl.innerHTML = `✨ <strong>Generated text:</strong> "I wanted to follow up on our conversation and see if you had any additional thoughts. Looking forward to hearing from you!"`;
+          } else if (tool === 'rewriter') {
+            demoEl.innerHTML = `✍️ <strong>Original:</strong> "hey can u send that thing"<br>✨ <strong>Rewritten:</strong> "Hi, could you please send over the document when you have a moment? Thanks!"`;
+          } else if (tool === 'ideas') {
+            demoEl.innerHTML = `💡 <strong>Idea spark:</strong> "How might we make daily communication more empathetic? Consider a 'tone check' feature."`;
+          }
         });
       });
     }
@@ -673,17 +698,16 @@
           <div class="stat-item"><i class="fas fa-bolt"></i> 32 tools</div>
           <div class="stat-item"><i class="fas fa-calendar"></i> 12 days</div>
         </div>
-        <div style="display: flex; gap: 1rem; margin-top: 1.2rem;">
-          <button class="settings-btn"><i class="fas fa-sliders"></i> Preferences</button>
-          <button class="settings-btn"><i class="fas fa-shield"></i> Privacy</button>
+        <div style="display: flex; gap: 1rem; margin-top: 1.2rem; flex-wrap: wrap;">
+          <button class="settings-btn" id="prefsBtn"><i class="fas fa-sliders"></i> Preferences</button>
+          <button class="settings-btn" id="privacyBtn"><i class="fas fa-shield"></i> Privacy</button>
         </div>
         <div style="margin-top: 2.8rem; opacity: 0.6;">
           <i class="fas fa-circle-info"></i> Smart assistant usage · 1.2k tokens today
         </div>
       `;
-      document.querySelectorAll('.settings-btn').forEach(btn => {
-        btn.addEventListener('click', () => alert('⚙️ Settings panel (glass demo)'));
-      });
+      document.getElementById('prefsBtn').addEventListener('click', () => alert('⚙️ Preferences: theme, notifications, language (glass demo)'));
+      document.getElementById('privacyBtn').addEventListener('click', () => alert('🔒 Privacy settings: your data stays local.'));
     }
 
     // helper
@@ -698,7 +722,20 @@
         btn.addEventListener('click', (e) => {
           const target = btn.dataset.quick;
           if (target === 'chat') setView('chat');
-          else if (target === 'tools') setView('tools');
+          else if (target === 'generate') {
+            setView('tools');
+            // simulate tool demo after render
+            setTimeout(() => {
+              const demoEl = document.getElementById('toolDemoText');
+              if (demoEl) demoEl.innerHTML = `✨ <strong>Generated text:</strong> "I wanted to follow up on our conversation and see if you had any additional thoughts. Looking forward to hearing from you!"`;
+            }, 50);
+          } else if (target === 'improve') {
+            setView('tools');
+            setTimeout(() => {
+              const demoEl = document.getElementById('toolDemoText');
+              if (demoEl) demoEl.innerHTML = `✍️ <strong>Improved:</strong> "Could you please review the attached file? I'd appreciate your feedback."`;
+            }, 50);
+          }
         });
       });
     }
@@ -738,19 +775,11 @@
       setView('dashboard');
     });
 
-    // Also handle if user wants to go back? Not required, but we keep start.
-
-    // initialize (landing visible)
-    // Pre-render nothing until start
-
-    // responsiveness: if already started? no.
-
-    // If someone opens with hash, ignore.
-    // Additional: if window resize, fine.
-
-    // For quick demo, if someone wants to see dashboard, they must click start.
+    // Prefill tools demo if needed
+    window.addEventListener('load', () => {
+      // everything ready
+    });
   })();
 </script>
-<!-- small extra polish: prevent body scroll when landing? no needed -->
 </body>
 </html>
